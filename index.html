@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca Buo</title>
+    <link rel="stylesheet" href="/library/style.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 1em;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            background-color: #555;
+            margin: 0;
+        }
+
+        nav ul li {
+            margin: 0;
+            padding: 1em;
+        }
+
+        nav ul li button {
+            background-color: #555;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        main {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Biblioteca Owl</h1>
+    </header>
+
+    <nav>
+        <ul>
+            <li><button onclick="addBookPrompt()">Añadir Libro</button></li>
+            <li><button onclick="addMagazinePrompt()">Añadir Revista</button></li>
+            <li><button onclick="borrowPrompt()">Prestar</button></li>
+            <li><button onclick="returnPrompt()">Devolver</button></li>
+            <li><button onclick="library.listInventory()">Lista de Objetos</button></li>
+            <li><button onclick="infoPrompt()">Información Entidad Bibliográfica</button></li>
+            <li><button onclick="addUserPrompt()">Añadir Usuario</button></li>
+        </ul>
+    </nav>
+
+    <main>
+        <script>
+            const usuarioPrueba = new Usuario('Usuario', '12345', '09-06-1995');
+            const usuarioPrueba2 = new Usuario('Segundo Usuario', '00000', '00-00-0000');
+
+            const biblioteca = new Biblioteca();
+            var primerAcceso = true;
+
+            function addBookPrompt(){
+                const codigo = prompt('Ingrese el código del libro');
+                const titulo = prompt('Ingrese el título del libro');
+                const autor = prompt('Ingrese el autor del libro');
+                const año = prompt('Ingrese el año del libro');
+                const genero = prompt('Ingrese el género del libro');
+
+                const libro = new Libro(codigo, titulo, autor, año, false, null, genero);
+
+                biblioteca.agregarItem(libro);
+            }
+
+            function addMagazinePrompt(){
+                const codigo = prompt('Ingrese el código de la revista');
+                const titulo = prompt('Ingrese el título de la revista');
+                const autor = prompt('Ingrese el autor de la revista');
+                const año = prompt('Ingrese el año de la revista');
+                const edicion = prompt('Ingrese la edición de la revista');
+
+                const revista = new Revista(codigo, titulo, autor, año, false, null, edicion);
+
+                biblioteca.agregarItem(revista);
+            }
+
+            function addUserPrompt(){
+                const nombre = prompt('Ingrese el nombre del usuario');
+                const registroAcademico = prompt('Ingrese el registro académico del usuario');
+                const fechaNacimiento = prompt('Ingrese la fecha de nacimiento del usuario en formato "AAAA-MM-DD"');
+
+                const usuario = new Usuario(nombre, registroAcademico, fechaNacimiento);
+
+                biblioteca.agregarUsuario(usuario);
+            }
+
+            function borrowPrompt(){
+                const codigo = prompt('Ingrese el código del ítem');
+                const registroAcademico = prompt('Ingrese el registro académico del usuario');
+
+                biblioteca.prestarItem(codigo, registroAcademico);
+            }
+
+            function returnPrompt(){
+                const codigo = prompt('Ingrese el código del ítem');
+
+                biblioteca.devolverItem(codigo);
+            }
+
+            function infoPrompt(){
+                const codigo = prompt('Ingrese el código del ítem');
+                const item = biblioteca.inventario.find(item => item.codigo === codigo);
+
+                if (!item){
+                    alert ('Ítem no encontrado');
+                }
+                else{
+                    item.informacion();
+                }
+            }
+
+            async function obtenerDatosAPI(){
+                try {
+                    const respuesta = await fetch('https://api-library-mb6w.onrender.com/inventario');
+                    const datos = await respuesta.json();
+                    return datos;
+                }
+                catch (error) {
+                    console.error(error);
+                    return [];
+                }
+            }
+
+            async function usuarioAPI(){
+                try {
+                    const respuesta = await fetch('https://api-library-mb6w.onrender.com/usuarios');
+                    const datos = await respuesta.json();
+                    return datos;
+                }
+                catch (error) {
+                    console.error(error);
+                    return [];
+                }
+            }
+
+            async function iniciarInventario(){
+                const inventario = await obtenerDatosAPI();
+                const usuarios = await usuarioAPI();
+
+                await biblioteca.popularInventario(inventario, usuarios);
+            }
+
+            iniciarInventario();
+            console.log(biblioteca.inventario);
+        </script>
+    </main>
+</body>
+</html>
